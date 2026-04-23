@@ -76,15 +76,13 @@ Checks performed:
 
 ## Reading the meter
 
-For the meter on the spec label (`15-0202517-189`, mfg 07/2015), the defaults
-baked into `everblu/config.py` already match, so a read during the listen
-window (Mon–Sat, 06:00–18:00 local) is simply:
+To read the meter, provide the first two components of serial number of RF unit (eg 15-0202517-123) to the --year and --serial parameters as follows:
 
 ```bash
 ./run.sh read_meter --year 15 --serial 202517 --json
 ```
 
-Example output captured from this installation on 2026-04-22 14:11 BST:
+Example output:
 
 ```json
 {
