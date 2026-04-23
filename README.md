@@ -76,7 +76,7 @@ Checks performed:
 
 ## Reading the meter
 
-To read the meter, provide the first two components of serial number of RF unit (eg 15-0202517-123) to the --year and --serial parameters as follows:
+To read the meter, provide the first two components of serial number of RF unit (eg `15-0202517-123`) to the `--year` and `--serial` parameters as follows:
 
 ```bash
 ./run.sh read_meter --year 15 --serial 202517 --json
