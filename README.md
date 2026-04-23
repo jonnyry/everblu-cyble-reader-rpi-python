@@ -161,7 +161,7 @@ tests/
 Hardware-independent unit tests:
 
 ```bash
-python -m pytest tests/
+./run.sh unit_test
 ```
 
 ## Protocol notes
