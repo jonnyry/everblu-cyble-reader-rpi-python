@@ -12,7 +12,19 @@ native Python 3 and adds a wiring/health diagnostic suite.
 
 ## Hardware
 
-Wiring (Pi header pin → CC1101 pin):
+### Water meter
+
+![Water meter with an Itron EverBlu Cyble RF unit attached](images/water-meter.jpg)
+
+### Raspberry Pi & CC1101 module
+
+![CC1101 RF module connected to a Raspberry Pi 5](images/rpi-cc1101.jpg)
+
+### CC1101 module
+
+![CC1101 RF module close up](images/cc1101.jpg)
+
+### Wiring (Pi header pin → CC1101 pin):
 
 | Pi header | BCM       | CC1101 pin |
 | --------- | --------- | ---------- |
@@ -25,8 +37,7 @@ Wiring (Pi header pin → CC1101 pin):
 | Pin 23    | SCLK      | SCK        |
 | Pin 24    | CE0       | CSN        |
 
-Enable SPI on the Pi: `sudo raspi-config` → *Interface Options* → *SPI* → enable.
-Reboot.
+Enable SPI on the Pi: `sudo raspi-config` → *Interface Options* → *SPI* → enable. Reboot.
 
 ## Install
 
@@ -81,7 +92,7 @@ Example output captured from this installation on 2026-04-22 14:11 BST:
 {
   "liters": 2196330,
   "reads_counter": 44,
-  "battery_months": 1,
+  "battery_months": 9,
   "window_start_hour": 6,
   "window_end_hour": 18,
   "valid": true
@@ -176,3 +187,9 @@ Derived from [`neutrinus/everblu-meters`](https://github.com/neutrinus/everblu-m
 [`psykokwak-com/everblu-meters-esp8266`](https://github.com/psykokwak-com/everblu-meters-esp8266)
 fork, which in turn reverse-engineered the Radian protocol from
 <http://www.lamaisonsimon.fr/wiki/doku.php?id=maison2:compteur_d_eau:compteur_d_eau>.
+
+## License
+
+The license is unknown, citing one of the authors:
+
+    I didn't put a license on this code maybe I should, I didn't know much about it in terms of licensing. this code was made by "looking" at the radian protocol which is said to be open source earlier in the page, I don't know if that helps?
