@@ -87,11 +87,11 @@ Example output:
 ```json
 {
   "liters": 1996330,
+  "meter_id": "55SF123456",
   "reads_counter": 44,
   "battery_months": 9,
   "window_start_hour": 6,
-  "window_end_hour": 18,
-  "meter_id": "55SF123456"
+  "window_end_hour": 18
 }
 ```
 
@@ -105,6 +105,7 @@ Example output:
 - `--json` / `--raw` — machine-readable output / include the raw hex frame.
 - `--force` — skip the weekday / listen-window guard (for bench testing).
 - `--verbose` / `-v` — include debug frames (request payload, RX phase info).
+- `--additional-readings` - include the list of additional readings (not sure what these are?)
 
 ### Finding the right frequency offset (first time on a new CC1101)
 

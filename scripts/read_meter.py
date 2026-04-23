@@ -16,18 +16,14 @@ from everblu.reader import MeterReader, ReaderError, in_listen_window
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--year", type=int, required=True,
-                   help="last 2 digits of the meter manufacture year")
-    p.add_argument("--serial", type=int, required=True,
-                   help="meter serial (middle segment of label, no leading 0)")
-    p.add_argument("--freq-offset-hz", type=int, default=0,
-                   help="CC1101 frequency trim in Hz")
+    p.add_argument("--year", type=int, required=True, help="last 2 digits of the meter manufacture year")
+    p.add_argument("--serial", type=int, required=True, help="meter serial (middle segment of label, no leading 0)")
+    p.add_argument("--freq-offset-hz", type=int, default=0, help="CC1101 frequency trim in Hz")
     p.add_argument("--retries", type=int, default=3)
     p.add_argument("--retry-delay", type=float, default=5.0)
-    p.add_argument("--force", action="store_true",
-                   help="try even outside the meter listen window")
-    p.add_argument("--raw", action="store_true",
-                   help="include the raw decoded frame (hex) in output")
+    p.add_argument("--force", action="store_true", help="try even outside the meter listen window")
+    p.add_argument("--raw", action="store_true", help="include the raw decoded frame (hex) in output")
+    p.add_argument("--additional-readings", action="store_true", help="include additional decoded readings in output")
     p.add_argument("--json", action="store_true")
     p.add_argument("--verbose", "-v", action="store_true")
     args = p.parse_args(argv)
@@ -67,16 +63,18 @@ def main(argv=None) -> int:
                   file=sys.stderr)
             return 1
 
-    payload = {
-        "liters": reading.liters,
-        "reads_counter": reading.reads_counter,
-        "battery_months": reading.battery_months,
-        "window_start_hour": reading.window_start_hour,
-        "window_end_hour": reading.window_end_hour
-    }
+    payload = {}
+    payload["liters"] = reading.liters
+
     if reading.meter_id:
         payload["meter_id"] = reading.meter_id
-    if reading.additional_readings:
+
+    payload["reads_counter"] = reading.reads_counter
+    payload["battery_months"] = reading.battery_months
+    payload["window_start_hour"] = reading.window_start_hour
+    payload["window_end_hour"] = reading.window_end_hour
+
+    if args.additional_readings and reading.additional_readings:
         payload["additional_readings"] = reading.additional_readings
     if args.raw:
         payload["raw_hex"] = reading.raw.hex()
@@ -86,13 +84,13 @@ def main(argv=None) -> int:
     else:
         print(f"Meter {args.year}-{args.serial:08d}")
         print(f"  liters:          {reading.liters}")
+        if reading.meter_id:
+            print(f"  meter_id:        {reading.meter_id}")
         print(f"  reads_counter:   {reading.reads_counter}")
         print(f"  battery_months:  {reading.battery_months}")
         print(f"  listen window:   {reading.window_start_hour}h-"
               f"{reading.window_end_hour}h")
-        if reading.meter_id:
-            print(f"  meter_id:        {reading.meter_id}")
-        if reading.additional_readings:
+        if args.additional_readings and reading.additional_readings:
             print(f"  additional:      {reading.additional_readings}")
         if args.raw:
             print(f"  raw ({len(reading.raw)}B): {reading.raw.hex()}")
