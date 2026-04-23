@@ -112,7 +112,7 @@ Example output:
 | `--json`                 | Machine-readable output                                                     |
 | `--raw`                  | Include the raw hex frame                                                   |
 | `--force`                | Skip the weekday/listen-window warning                                      |
-| `--verbose` / `-v`       | Include debug frames (request payload, RX phase info)                       |
+| `--verbose`              | Include debug frames (request payload, RX phase info)                       |
 | `--additional-readings`  | Include the list of additional readings (unspecified/unclear purpose)       |
 
 ### Finding the right frequency offset (first time on a new CC1101)
