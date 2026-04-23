@@ -72,9 +72,12 @@ def main(argv=None) -> int:
         "reads_counter": reading.reads_counter,
         "battery_months": reading.battery_months,
         "window_start_hour": reading.window_start_hour,
-        "window_end_hour": reading.window_end_hour,
-        "valid": reading.is_valid(),
+        "window_end_hour": reading.window_end_hour
     }
+    if reading.meter_id:
+        payload["meter_id"] = reading.meter_id
+    if reading.additional_readings:
+        payload["additional_readings"] = reading.additional_readings
     if args.raw:
         payload["raw_hex"] = reading.raw.hex()
 
@@ -87,6 +90,10 @@ def main(argv=None) -> int:
         print(f"  battery_months:  {reading.battery_months}")
         print(f"  listen window:   {reading.window_start_hour}h-"
               f"{reading.window_end_hour}h")
+        if reading.meter_id:
+            print(f"  meter_id:        {reading.meter_id}")
+        if reading.additional_readings:
+            print(f"  additional:      {reading.additional_readings}")
         if args.raw:
             print(f"  raw ({len(reading.raw)}B): {reading.raw.hex()}")
 

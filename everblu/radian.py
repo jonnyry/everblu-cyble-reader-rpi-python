@@ -24,7 +24,7 @@ To read the meter the collector:
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 
@@ -225,6 +225,8 @@ class MeterReading:
     battery_months: Optional[int] = None
     window_start_hour: Optional[int] = None
     window_end_hour: Optional[int] = None
+    meter_id: Optional[str] = None  # Meter identifier string
+    additional_readings: list[int] = field(default_factory=list)  # Additional 32-bit values
     raw: bytes = b""
 
     def is_valid(self) -> bool:
@@ -245,4 +247,39 @@ def parse_meter_report(decoded: bytes) -> MeterReading:
         r.battery_months = decoded[31]
         r.window_start_hour = decoded[44]
         r.window_end_hour = decoded[45]
+    # Extract meter ID string (around offset 32, typically 9 bytes)
+    if len(decoded) >= 42:
+        # Look for ASCII string around offset 32
+        id_start = 32
+        id_end = min(42, len(decoded))
+        potential_id = decoded[id_start:id_end]
+        # Extract printable ASCII characters
+        id_bytes = []
+        for b in potential_id:
+            if 32 <= b <= 126:  # Printable ASCII
+                id_bytes.append(b)
+            elif id_bytes:  # Stop at first non-printable after starting
+                break
+        if len(id_bytes) >= 3:
+            r.meter_id = bytes(id_bytes).decode('ascii', errors='ignore')[::-1]
+    
+    # Extract additional 32-bit readings (starting around offset 70)
+    # These may be historical readings or other meter data
+    reading_offset = 70
+    while reading_offset + 4 <= len(decoded):
+        # Stop if we hit padding (0x80 bytes) or end of meaningful data
+        if decoded[reading_offset:reading_offset+4] == b'\x80\x80\x80\x80':
+            break
+        try:
+            reading = int.from_bytes(decoded[reading_offset:reading_offset+4], "little")
+            # Only include reasonable values (filter out obvious garbage)
+            if 0 < reading < 10000000:  # Similar range to main liters reading
+                r.additional_readings.append(reading)
+        except (ValueError, OverflowError):
+            pass
+        reading_offset += 4
+        # Limit to reasonable number of readings
+        if len(r.additional_readings) >= 10:
+            break
+    
     return r

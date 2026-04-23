@@ -24,7 +24,9 @@ class DiagResult:
 
     def __str__(self) -> str:
         mark = "PASS" if self.passed else "FAIL"
-        return f"[{mark}] {self.name}: {self.detail}"
+        color = "\033[32m" if self.passed else "\033[31m"  # Green for PASS, Red for FAIL
+        reset = "\033[0m"
+        return f"[{color}{mark}{reset}] {self.name}: {self.detail}"
 
 
 def check_spi_partnum_version(radio: CC1101) -> DiagResult:

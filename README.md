@@ -88,12 +88,12 @@ Example output captured from this installation on 2026-04-22 14:11 BST:
 
 ```json
 {
-  "liters": 2196330,
+  "liters": 1996330,
   "reads_counter": 44,
   "battery_months": 9,
   "window_start_hour": 6,
   "window_end_hour": 18,
-  "valid": true
+  "meter_id": "55SF123456"
 }
 ```
 
@@ -119,12 +119,10 @@ To recalibrate for a different module:
 
 ```bash
 # 1. Coarse sweep (±80 kHz in 20 kHz steps):
-./run.sh freq_scan --year 15 --serial 202517 \
-    --start-hz -80000 --stop-hz 80000 --step-hz 20000
+./run.sh freq_scan --year 15 --serial 202517 --start-hz -80000 --stop-hz 80000 --step-hz 20000
 
 # 2. Narrow in on the hit with a finer step:
-./run.sh freq_scan --year 15 --serial 202517 \
-    --start-hz -30000 --stop-hz -10000 --step-hz 2500
+./run.sh freq_scan --year 15 --serial 202517 --start-hz -30000 --stop-hz -10000 --step-hz 2500
 ```
 
 Pick the midpoint of the reliable band and either pass it as
@@ -188,4 +186,4 @@ fork, which in turn reverse-engineered the Radian protocol from
 
 The license is unknown, citing one of the authors:
 
-    I didn't put a license on this code maybe I should, I didn't know much about it in terms of licensing. this code was made by "looking" at the radian protocol which is said to be open source earlier in the page, I don't know if that helps?
+> I didn't put a license on this code maybe I should, I didn't know much about it in terms of licensing. this code was made by "looking" at the radian protocol which is said to be open source earlier in the page, I don't know if that helps?
