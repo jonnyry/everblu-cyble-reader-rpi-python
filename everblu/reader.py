@@ -203,7 +203,7 @@ class MeterReader:
         if not force and not in_listen_window(self.cfg):
             log.warning(
                 "Outside the meter's listen window (%s-%s Mon-Sat); "
-                "the meter will not respond. Use force=True to try anyway.",
+                "the meter will not respond. Use --force to ignore.",
                 self.cfg.meter.listen_start, self.cfg.meter.listen_end,
             )
 
