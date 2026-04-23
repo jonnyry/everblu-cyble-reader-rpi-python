@@ -14,14 +14,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from everblu.config import Config, DEFAULT_METER_SERIAL, DEFAULT_METER_YEAR
+from everblu.config import Config
 from everblu.reader import MeterReader, ReaderError
 
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--year", type=int, default=DEFAULT_METER_YEAR)
-    p.add_argument("--serial", type=int, default=DEFAULT_METER_SERIAL)
+    p.add_argument("--year", type=int, required=True)
+    p.add_argument("--serial", type=int, required=True)
     p.add_argument("--start-hz", type=int, default=-60_000)
     p.add_argument("--stop-hz", type=int, default=60_000)
     p.add_argument("--step-hz", type=int, default=5_000)

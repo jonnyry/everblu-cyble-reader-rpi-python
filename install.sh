@@ -8,6 +8,20 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
+# Check if sudo is available
+if ! command -v sudo &> /dev/null; then
+    echo "ERROR: sudo is not installed or not available."
+    echo "This script requires sudo access to complete the setup."
+    exit 1
+fi
+
+# Verify sudo access
+if ! sudo -v &> /dev/null; then
+    echo "ERROR: Unable to obtain sudo privileges."
+    echo "Please ensure you have sudo access and try again."
+    exit 1
+fi
+
 USER_NAME="${SUDO_USER:-$USER}"
 
 echo "[1/5] Enable SPI via raspi-config..."
@@ -33,5 +47,3 @@ echo
 echo "You must log out and back in (or reboot) for the spi/gpio group"
 echo "membership to take effect for $USER_NAME."
 echo
-echo "Then run the diagnostic suite:"
-echo "    ./.venv/bin/python scripts/diag.py"

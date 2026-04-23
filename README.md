@@ -42,9 +42,7 @@ Enable SPI on the Pi: `sudo raspi-config` → *Interface Options* → *SPI* → 
 ## Install
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+./install.sh
 ```
 
 `lgpio` is required (not `RPi.GPIO`, which does not work on the Pi 5).
@@ -55,7 +53,7 @@ Verify the board is wired correctly and the CC1101 is alive **before**
 trying to talk to the meter:
 
 ```bash
-sudo ./.venv/bin/python scripts/diag.py
+./run.sh diag
 ```
 
 Checks performed:
@@ -83,7 +81,7 @@ baked into `everblu/config.py` already match, so a read during the listen
 window (Mon–Sat, 06:00–18:00 local) is simply:
 
 ```bash
-sudo ./.venv/bin/python scripts/read_meter.py --year 15 --serial 202517 --json
+./run.sh read_meter --year 15 --serial 202517 --json
 ```
 
 Example output captured from this installation on 2026-04-22 14:11 BST:
@@ -121,13 +119,11 @@ To recalibrate for a different module:
 
 ```bash
 # 1. Coarse sweep (±80 kHz in 20 kHz steps):
-sudo ./.venv/bin/python scripts/freq_scan.py \
-    --year 15 --serial 202517 \
+./run.sh freq_scan --year 15 --serial 202517 \
     --start-hz -80000 --stop-hz 80000 --step-hz 20000
 
 # 2. Narrow in on the hit with a finer step:
-sudo ./.venv/bin/python scripts/freq_scan.py \
-    --year 15 --serial 202517 \
+./run.sh freq_scan --year 15 --serial 202517 \
     --start-hz -30000 --stop-hz -10000 --step-hz 2500
 ```
 

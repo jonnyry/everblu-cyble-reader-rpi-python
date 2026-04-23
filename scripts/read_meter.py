@@ -10,15 +10,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from everblu.config import Config, DEFAULT_METER_SERIAL, DEFAULT_METER_YEAR
+from everblu.config import Config
 from everblu.reader import MeterReader, ReaderError, in_listen_window
 
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--year", type=int, default=DEFAULT_METER_YEAR,
+    p.add_argument("--year", type=int, required=True,
                    help="last 2 digits of the meter manufacture year")
-    p.add_argument("--serial", type=int, default=DEFAULT_METER_SERIAL,
+    p.add_argument("--serial", type=int, required=True,
                    help="meter serial (middle segment of label, no leading 0)")
     p.add_argument("--freq-offset-hz", type=int, default=0,
                    help="CC1101 frequency trim in Hz")
