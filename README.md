@@ -28,8 +28,8 @@ native Python 3 and adds a wiring/health diagnostic suite.
 
 | Pi header | BCM       | CC1101 pin |
 | --------- | --------- | ---------- |
-| Pin 1     | 3V3       | VCC        |
-| Pin 6     | GND       | GND        |
+| Pin 17    | 3V3       | VCC        |
+| Pin 20    | GND       | GND        |
 | Pin 11    | GPIO17    | GDO0       |
 | Pin 13    | GPIO27    | GDO2       |
 | Pin 19    | MOSI      | MOSI       |
