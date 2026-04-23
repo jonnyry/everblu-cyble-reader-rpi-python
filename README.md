@@ -16,6 +16,8 @@ native Python 3 and adds a wiring/health diagnostic suite.
 
 ![Water meter with an Itron EverBlu Cyble RF unit attached](images/water-meter.jpg)
 
+*Yes, my meter is dirty!*
+
 ### Raspberry Pi & CC1101 module
 
 ![CC1101 RF module connected to a Raspberry Pi 5](images/rpi-cc1101.jpg)
@@ -41,11 +43,19 @@ Enable SPI on the Pi: `sudo raspi-config` → *Interface Options* → *SPI* → 
 
 ## Install
 
+Run the following to setup your python environment, and grant access to SPI and GPIO:
+
 ```bash
 ./install.sh
 ```
+`install.sh` does the following:
+1. Enables SPI via raspi-config.
+2. Install system packages via apt
+3. Grant current user access to SPI and GPIO
+4. Create a Python virtual environment
+5. Install Python packages.
 
-`lgpio` is required (not `RPi.GPIO`, which does not work on the Pi 5).
+**You must log out and back in (or reboot) for the spi/gpio group membership to take effect.**
 
 ## Diagnostics (run this first)
 
@@ -56,23 +66,18 @@ trying to talk to the meter:
 ./run.sh diag
 ```
 
-Checks performed:
+Example output:
 
-1. **PARTNUM / VERSION** — expects `PARTNUM=0x00`, `VERSION ∈ {0x04, 0x14, 0x17}`.
-   A hint is printed for common failure modes (all-zero = MISO floating,
-   all-ones = CSN/SCK/power issue).
-2. **PATABLE write/read-back** — validates burst SPI.
-3. **Strobe/MARCSTATE** — confirms the chip transitions IDLE → RX → IDLE.
-4. **Frequency register programming** — writes 433.82 MHz, reads back, verifies.
-5. **GDO0/GDO2 wiring** — drives each GDO pin to hardware 0/1 via the CC1101
-   `IOCFG` register and checks the Pi reads the correct level. Proves both
-   pins are connected to the right GPIO.
-6. **XOSC/192 clock on GDO0** — routes the ~135 kHz divided clock to GDO0;
-   any non-trivial edge count confirms the crystal is running.
-7. **RX noise floor (RSSI)** — puts the radio into RX, reports min/avg/max
-   RSSI. Values typically in the `-90…-110 dBm` range mean the antenna/front
-   end is alive.
-8. **Config register dump** — full 47-byte register snapshot for comparison.
+```bash
+[PASS] CC1101 PARTNUM/VERSION: PARTNUM=0x00 VERSION=0x14
+[PASS] PATABLE write/read-back: wrote=['0x11', '0x22', '0x33', '0x44', '0x55', '0x66', '0x77', '0x88'] read=['0x11', '0x22', '0x33', '0x44', '0x55', '0x66', '0x77', '0x88']
+[PASS] Strobe & state transitions: IDLE=0x01 RX=0x0D IDLE2=0x01
+[PASS] Frequency register programming: wrote 433820000 Hz, read back 433819855 Hz (err 145 Hz)
+[PASS] GDO0/GDO2 wiring: GDO0(pin17): low=0 high=1; GDO2(pin27): low=0 high=1
+[PASS] XOSC/192 clock on GDO0: 2690 edges in 10.0 ms (observed ~134.5 kHz, true 135.4 kHz; polling can undersample)
+[PASS] RX noise floor (RSSI): min=-131.5 avg=-102.3 max=-99.0 dBm over 50 samples
+[PASS] Config register dump: 47 registers: 0D 2E 06 47 55 00 FF 00 00 00 00 08 00 10 AF 75 F6 83 02 00 00 15 07 00 18 1D 1C C7 00 B2 87 6B FB B6 10 E9 2A 00 1F 41 00 59 7F 3F 81 35 09
+```
 
 ## Reading the meter
 
@@ -95,17 +100,20 @@ Example output:
 }
 ```
 
-- `--year` — last two digits of the manufacture year (`2015` → `15`).
-- `--serial` — middle segment of the label serial with any leading zero
-  stripped (`15-0202517-189` → `0202517`).
-- `--freq-offset-hz` — trim, in Hz, added to 433.82 MHz (only needed if your
-  module disagrees with the default `-15000` calibrated for this build).
-- `--retries 3` — retry count; the meter may miss the first wake-up.
-- `--retry-delay 5` — seconds between retries.
-- `--json` / `--raw` — machine-readable output / include the raw hex frame.
-- `--force` — skip the weekday / listen-window guard (for bench testing).
-- `--verbose` / `-v` — include debug frames (request payload, RX phase info).
-- `--additional-readings` - include the list of additional readings (not sure what these are?)
+#### Arguments:
+
+| Option                   | Description                                                                 |
+|--------------------------|-----------------------------------------------------------------------------|
+| `--year`                 | First segment of the label serial (`15-0202517-189` → `15`)                 |
+| `--serial`               | Middle segment of the label serial with leading zeros stripped (e.g. `15-0202517-189` → `0202517`). |
+| `--freq-offset-hz`       | Frequency trim (Hz) added to 433.82 MHz; only needed if not using default -15000 calibration. |
+| `--retries 3`            | Retry count; the meter may miss the first wake-up                           |
+| `--retry-delay 5`        | Seconds between retries                                                     |
+| `--json`                 | Machine-readable output                                                     |
+| `--raw`                  | Include the raw hex frame                                                   |
+| `--force`                | Skip the weekday/listen-window warning                                      |
+| `--verbose` / `-v`       | Include debug frames (request payload, RX phase info)                       |
+| `--additional-readings`  | Include the list of additional readings (unspecified/unclear purpose)       |
 
 ### Finding the right frequency offset (first time on a new CC1101)
 
