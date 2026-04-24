@@ -101,7 +101,7 @@ Example output:
 }
 ```
 
-**Please note: the timestamp is taken from the Raspberry Pi and is not returned in the meter payload**
+**Please note: the timestamp is taken from the Raspberry Pi and is NOT returned in the meter payload.**
 
 #### Arguments:
 
