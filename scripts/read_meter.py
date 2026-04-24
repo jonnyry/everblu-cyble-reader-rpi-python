@@ -6,6 +6,7 @@ import json
 import logging
 import sys
 import time
+import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -21,7 +22,6 @@ def main(argv=None) -> int:
     p.add_argument("--freq-offset-hz", type=int, default=0, help="CC1101 frequency trim in Hz")
     p.add_argument("--retries", type=int, default=3)
     p.add_argument("--retry-delay", type=float, default=5.0)
-    p.add_argument("--force", action="store_true", help="try even outside the meter listen window")
     p.add_argument("--raw", action="store_true", help="include the raw decoded frame (hex) in output")
     p.add_argument("--additional-readings", action="store_true", help="include additional decoded readings in output")
     p.add_argument("--json", action="store_true")
@@ -38,19 +38,21 @@ def main(argv=None) -> int:
     cfg.meter.serial = args.serial
     cfg.radio.freq_offset_hz = args.freq_offset_hz
 
-    if not args.force and not in_listen_window(cfg):
+    if not in_listen_window(cfg):
         print(
             f"WARNING: outside meter listen window "
             f"({cfg.meter.listen_start}-{cfg.meter.listen_end}, Mon-Sat). "
-            f"Meter will likely not respond. Pass --force to try anyway.",
+            f"Meter will likely not respond.",
             file=sys.stderr,
         )
+
+    timestamp = datetime.datetime.now().isoformat()
 
     last_exc = None
     with MeterReader(cfg) as reader:
         for attempt in range(1, args.retries + 1):
             try:
-                reading = reader.read(force=args.force)
+                reading = reader.read()
                 break
             except ReaderError as exc:
                 last_exc = exc
@@ -63,17 +65,15 @@ def main(argv=None) -> int:
                   file=sys.stderr)
             return 1
 
-    payload = {}
-    payload["liters"] = reading.liters
-
-    if reading.meter_id:
-        payload["meter_id"] = reading.meter_id
-
-    payload["reads_counter"] = reading.reads_counter
-    payload["battery_months"] = reading.battery_months
-    payload["window_start_hour"] = reading.window_start_hour
-    payload["window_end_hour"] = reading.window_end_hour
-
+    payload = {
+        "meter_id": reading.meter_id,
+        "timestamp": timestamp,
+        "liters": reading.liters,
+        "reads_counter": reading.reads_counter,
+        "battery_months": reading.battery_months,
+        "window_start_hour": reading.window_start_hour,
+        "window_end_hour": reading.window_end_hour,
+    }
     if args.additional_readings and reading.additional_readings:
         payload["additional_readings"] = reading.additional_readings
     if args.raw:
@@ -82,18 +82,16 @@ def main(argv=None) -> int:
     if args.json:
         print(json.dumps(payload, indent=2))
     else:
-        print(f"Meter {args.year}-{args.serial:08d}")
-        print(f"  liters:          {reading.liters}")
-        if reading.meter_id:
-            print(f"  meter_id:        {reading.meter_id}")
-        print(f"  reads_counter:   {reading.reads_counter}")
-        print(f"  battery_months:  {reading.battery_months}")
-        print(f"  listen window:   {reading.window_start_hour}h-"
-              f"{reading.window_end_hour}h")
+        print(f"meter_id:        {reading.meter_id}")
+        print(f"timestamp:       {timestamp}")
+        print(f"liters:          {reading.liters}")
+        print(f"reads_counter:   {reading.reads_counter}")
+        print(f"battery_months:  {reading.battery_months}")
+        print(f"listen_window:   {reading.window_start_hour}h-{reading.window_end_hour}h")
         if args.additional_readings and reading.additional_readings:
-            print(f"  additional:      {reading.additional_readings}")
+            print(f"additional:      {reading.additional_readings}")
         if args.raw:
-            print(f"  raw ({len(reading.raw)}B): {reading.raw.hex()}")
+            print(f"raw_hex:         {reading.raw.hex()}")
 
     return 0 if reading.is_valid() else 1
 

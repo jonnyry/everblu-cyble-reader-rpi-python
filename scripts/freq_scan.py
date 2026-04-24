@@ -25,7 +25,6 @@ def main(argv=None) -> int:
     p.add_argument("--start-hz", type=int, default=-60_000)
     p.add_argument("--stop-hz", type=int, default=60_000)
     p.add_argument("--step-hz", type=int, default=5_000)
-    p.add_argument("--force", action="store_true")
     p.add_argument("--verbose", "-v", action="store_true")
     args = p.parse_args(argv)
 
@@ -44,7 +43,7 @@ def main(argv=None) -> int:
         cfg.radio.freq_offset_hz = offset
         with MeterReader(cfg) as reader:
             try:
-                reading = reader.read(force=args.force)
+                reading = reader.read()
                 ok = reading.is_valid()
                 rssi = reader.radio.rssi_dbm()
             except ReaderError as exc:

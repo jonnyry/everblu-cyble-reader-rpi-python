@@ -198,12 +198,12 @@ class MeterReader:
         return bytes(raw)
 
     # ---------------------------------------------------- public API
-    def read(self, *, force: bool = False) -> MeterReading:
+    def read(self) -> MeterReading:
         """Wake the meter, request the index, decode and parse the reply."""
-        if not force and not in_listen_window(self.cfg):
+        if not in_listen_window(self.cfg):
             log.warning(
                 "Outside the meter's listen window (%s-%s Mon-Sat); "
-                "the meter will not respond. Use --force to ignore.",
+                "the meter will likely not respond.",
                 self.cfg.meter.listen_start, self.cfg.meter.listen_end,
             )
 

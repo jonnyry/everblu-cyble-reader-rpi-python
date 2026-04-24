@@ -91,8 +91,9 @@ Example output:
 
 ```json
 {
-  "liters": 1996330,
   "meter_id": "55SF123456",
+  "timestamp": "2026-04-24T09:49:23.587257",
+  "liters": 1996330,
   "reads_counter": 44,
   "battery_months": 9,
   "window_start_hour": 6,
@@ -100,18 +101,19 @@ Example output:
 }
 ```
 
+**Please note: the timestamp is taken from the Raspberry Pi and is not returned in the meter payload**
+
 #### Arguments:
 
 | Option                   | Description                                                                 |
 |--------------------------|-----------------------------------------------------------------------------|
-| `--year`                 | First segment of the label serial (`15-0202517-189` → `15`)                 |
-| `--serial`               | Middle segment of the label serial with leading zeros stripped (e.g. `15-0202517-189` → `0202517`). |
+| `--year`                 | First segment of the label serial (`15-0202517-123` → `15`)                 |
+| `--serial`               | Middle segment of the label serial with leading zeros stripped (e.g. `15-0202517-123` → `0202517`). |
 | `--freq-offset-hz`       | Frequency trim (Hz) added to 433.82 MHz; only needed if not using default -15000 calibration. |
 | `--retries 3`            | Retry count; the meter may miss the first wake-up                           |
 | `--retry-delay 5`        | Seconds between retries                                                     |
 | `--json`                 | Machine-readable output                                                     |
 | `--raw`                  | Include the raw hex frame                                                   |
-| `--force`                | Skip the weekday/listen-window warning                                      |
 | `--verbose`              | Include debug frames (request payload, RX phase info)                       |
 | `--additional-readings`  | Include the list of additional readings (unspecified/unclear purpose)       |
 
