@@ -141,21 +141,23 @@ default in `everblu/config.py`.
 ## Package layout
 
 ```
+cron/
+    cron_read_meter.sh   Script to help with calling from cron
 everblu/
-    config.py         Meter / radio / GPIO configuration dataclasses
-    cc1101_regs.py    CC1101 register & strobe constants, default config table
-    cc1101.py         Thin spidev-based CC1101 driver
-    gpio.py           lgpio-based GPIO wrapper (Pi 5 compatible)
-    radian.py         Pure-Python Radian protocol (CRC, encode, decode, parse)
-    reader.py         Wake-up + request + 2-stage RX orchestration
-    diagnostics.py    Wiring / chip health checks
+    config.py            Meter / radio / GPIO configuration dataclasses
+    cc1101_regs.py       CC1101 register & strobe constants, default config table
+    cc1101.py            Thin spidev-based CC1101 driver
+    gpio.py              lgpio-based GPIO wrapper (Pi 5 compatible)
+    radian.py            Pure-Python Radian protocol (CRC, encode, decode, parse)
+    reader.py            Wake-up + request + 2-stage RX orchestration
+    diagnostics.py       Wiring / chip health checks
 scripts/
-    diag.py           CLI: run diagnostics
-    read_meter.py     CLI: read the meter
-    freq_scan.py      CLI: sweep frequency to find the crystal calibration
+    diag.py              CLI: run diagnostics
+    read_meter.py        CLI: read the meter
+    freq_scan.py         CLI: sweep frequency to find the crystal calibration
 tests/
-    test_radian.py    CRC, encode/decode and frame construction tests
-    test_cc1101.py    Driver tests against an in-memory SPI mock
+    test_radian.py       CRC, encode/decode and frame construction tests
+    test_cc1101.py       Driver tests against an in-memory SPI mock
 ```
 
 ## Testing
