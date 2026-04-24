@@ -5,6 +5,8 @@
 #
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Go up to project root (assuming script is in cron/ subdirectory)
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_FILE="${LOG_FILE:-$SCRIPT_DIR/readings.log}"
 
 # parameters
@@ -32,7 +34,7 @@ stdout=$(mktemp)
 stderr=$(mktemp)
 
 # Run script once: stdout -> file, stderr -> file
-"$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/scripts/read_meter.py" --year "$YEAR" --serial "$SERIAL" --json --raw >"$stdout" 2>"$stderr"
+"$PROJECT_DIR/.venv/bin/python" "$PROJECT_DIR/scripts/read_meter.py" --year "$YEAR" --serial "$SERIAL" --json --raw >"$stdout" 2>"$stderr"
 exit_code=$?
 
 if [ $exit_code -eq 0 ]; then
