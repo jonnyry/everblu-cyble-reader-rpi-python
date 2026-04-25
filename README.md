@@ -92,7 +92,7 @@ Example output:
 ```json
 {
   "meter_id": "55SF123456",
-  "timestamp": "2026-04-24T09:49:23.587257",
+  "timestamp": "2026-04-24T09:49:23.587257+0100",
   "liters": 1996330,
   "reads_counter": 44,
   "battery_months": 9,
@@ -141,8 +141,6 @@ default in `everblu/config.py`.
 ## Package layout
 
 ```
-cron/
-    cron_read_meter.sh   Script to help with calling from cron
 everblu/
     config.py            Meter / radio / GPIO configuration dataclasses
     cc1101_regs.py       CC1101 register & strobe constants, default config table

@@ -46,7 +46,7 @@ def main(argv=None) -> int:
             file=sys.stderr,
         )
 
-    timestamp = datetime.datetime.now().isoformat()
+    timestamp = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()
 
     last_exc = None
     with MeterReader(cfg) as reader:

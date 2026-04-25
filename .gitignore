@@ -1,2 +1,5 @@
 __pycache__/
 /.venv
+/cron/meter_config.env
+/cron/readings.log
+.lgd-nfy0

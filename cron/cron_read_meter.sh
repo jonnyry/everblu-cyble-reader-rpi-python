@@ -5,45 +5,42 @@
 #
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Go up to project root (assuming script is in cron/ subdirectory)
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+CONFIG_FILE="${SCRIPT_DIR}/meter_config.env"
 LOG_FILE="${LOG_FILE:-$SCRIPT_DIR/readings.log}"
 
-# parameters
-YEAR="${METER_YEAR}"
-SERIAL="${METER_SERIAL}"
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Missing config file: $CONFIG_FILE" >&2
+    exit 1
+fi
 
-# Function to get ISO8601 timestamp
+source "$CONFIG_FILE"
+: "${YEAR:?YEAR is not set in $CONFIG_FILE}"
+: "${SERIAL:?SERIAL is not set in $CONFIG_FILE}"
+
 get_timestamp() {
-    date -u +"%Y-%m-%dT%H:%M:%SZ"
+    date +"%Y-%m-%dT%H:%M:%S%z"
 }
 
-# Function to wrap error in JSON
 wrap_error() {
     local error_message="$1"
     local timestamp
     timestamp=$(get_timestamp)
-    # Escape the error message for valid JSON and pretty-print
     local escaped
     escaped=$(echo "$error_message" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read()))')
     python3 -c "import sys,json; d={'timestamp':'${timestamp}','error':$escaped}; print(json.dumps(d, indent=2))"
 }
 
-# Run the meter read - capture stdout and stderr separately in one run
 stdout=$(mktemp)
 stderr=$(mktemp)
 
-# Run script once: stdout -> file, stderr -> file
 "$PROJECT_DIR/.venv/bin/python" "$PROJECT_DIR/scripts/read_meter.py" --year "$YEAR" --serial "$SERIAL" --json --raw >"$stdout" 2>"$stderr"
 exit_code=$?
 
 if [ $exit_code -eq 0 ]; then
-    # Success: output clean JSON from stdout
     cat "$stdout"
 else
-    # Failure: wrap stderr content in JSON error
     wrap_error "$(cat "$stderr")"
 fi >> "$LOG_FILE"
 
-# Cleanup
 rm -f "$stdout" "$stderr"
