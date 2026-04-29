@@ -325,9 +325,36 @@ def render_manifest() -> str:
     }, indent=2)
 
 
-def render_html(generated_at: datetime) -> str:
+def _last_n_readings(entries: list[dict], n: int = 7) -> list[dict]:
+    valid = [e for e in entries if "liters" in e and "timestamp" in e]
+    valid.sort(key=lambda e: e["timestamp"])
+    return valid[-n:]
+
+
+def _render_readings_table(readings: list[dict]) -> str:
+    rows = []
+    for i in range(len(readings) - 1, -1, -1):
+        e = readings[i]
+        ts = datetime.fromisoformat(e["timestamp"])
+        date_str = ts.strftime("%a %d %b %Y")
+        time_str = ts.strftime("%H:%M")
+        m3 = e["liters"] / 1000
+        if i > 0:
+            delta = e["liters"] - readings[i - 1]["liters"]
+            delta_cell = f"<td class='val'>{delta:,} L</td>"
+        else:
+            delta_cell = "<td class='val muted'>—</td>"
+        rows.append(
+            f"    <tr><td>{date_str}</td><td class='time'>{time_str}</td>"
+            f"<td class='val'>{m3:.3f} m³</td>{delta_cell}</tr>"
+        )
+    return "\n".join(rows)
+
+
+def render_html(generated_at: datetime, week_days: list[dict], entries: list[dict]) -> str:
     timestamp = generated_at.strftime("%d-%b-%Y %H:%M")
     cache_bust = generated_at.strftime("%Y%m%d%H%M")
+    table_rows = _render_readings_table(_last_n_readings(entries, 8))
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -348,6 +375,12 @@ def render_html(generated_at: datetime) -> str:
             padding: 16px; margin-bottom: 24px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.03); }}
   img {{ display: block; max-width: 100%; height: auto; }}
+  table {{ border-collapse: collapse; font-size: 14px; }}
+  td {{ padding: 6px 16px 6px 0; border-bottom: 1px solid #f0f0f0; }}
+  td.val {{ text-align: right; font-variant-numeric: tabular-nums; }}
+  td.val:last-child {{ padding-right: 0; }}
+  td.time {{ color: #888; }}
+  td.muted {{ color: #bbb; }}
 </style>
 </head>
 <body>
@@ -358,6 +391,12 @@ def render_html(generated_at: datetime) -> str:
   </section>
   <section>
     <img src="{MONTH_SVG}?v={cache_bust}" alt="Water usage, last 30 days">
+  </section>
+  <section>
+    <h2 style="margin:0 0 12px;font-size:16px;">Last 7 days</h2>
+    <table>
+{table_rows}
+    </table>
   </section>
 </body>
 </html>
@@ -386,7 +425,7 @@ def main():
     (out_dir / ICON_192_PNG).write_bytes(render_icon_png(192))
     (out_dir / ICON_512_PNG).write_bytes(render_icon_png(512))
     (out_dir / MANIFEST_JSON).write_text(render_manifest())
-    (out_dir / DASHBOARD_HTML).write_text(render_html(datetime.now()))
+    (out_dir / DASHBOARD_HTML).write_text(render_html(datetime.now(), week_days, entries))
 
     print(f"Wrote files to {out_dir}/")
     print("Week view:")
