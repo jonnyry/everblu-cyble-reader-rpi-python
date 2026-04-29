@@ -1,4 +1,4 @@
-# EverBlu Cyble Water Meter Reader
+# EverBlu Cyble Water Meter Reader & Charting
 
 Python implementation for reading an **Itron EverBlu Cyble Enhanced V2.1** water
 meter over 433 MHz using a **Raspberry Pi 5** and a **CC1101** SPI
@@ -9,6 +9,27 @@ native Python 3 and adds a wiring/health diagnostic suite.
 > The meter uses the proprietary **Radian** protocol (2-FSK on 433.82 MHz). It
 > only wakes to listen on **weekdays, typically 06:00–18:00**. Outside the
 > window the meter will not respond — this is expected, not a bug.
+
+## Contents
+
+- [Hardware](#hardware)
+  - [Water meter](#water-meter)
+  - [Raspberry Pi & CC1101 module](#raspberry-pi--cc1101-module)
+  - [CC1101 module](#cc1101-module)
+  - [Wiring](#wiring-pi-header-pin--cc1101-pin)
+- [Software](#software)
+  - [Clone repo](#clone-repo)
+  - [Install](#install)
+  - [Wiring check - diagnostics](#wiring-check---diagnostics)
+  - [Reading the meter](#reading-the-meter)
+  - [Generating charts](#generating-charts)
+  - [Automation with cron](#automation-with-cron)
+  - [Frequency scan](#frequency-scan---finding-the-right-frequency-offset)
+  - [Testing](#testing)
+  - [Package layout](#package-layout)
+  - [Protocol notes](#protocol-notes)
+- [Credits](#credits)
+- [License](#license)
 
 # Hardware
 
@@ -145,6 +166,15 @@ Once you have a several readings in JSON format in a log file (see automation se
 ./run.sh chart --log-file automation/readings.log --output-dir ~/www
 ```
 
+#### Arguments:
+
+| Option | Description |
+|--------|-------------|
+| `--log-file` | Path to the readings log produced by `read_meter --json` |
+| `--output-dir` | Directory to write output files (default: current directory) |
+
+This produces a dashboard like the following:
+
 ![Water meter dashboard](images/water-meter-dashboard.png)
 
 This writes the following files to the output directory:
@@ -158,14 +188,6 @@ This writes the following files to the output directory:
 The dashboard shows:
 - Daily litres used per day (bars shaded differently for estimated vs. measured days)
 - A table of the last 7 actual meter readings with timestamps and cumulative value in m³
-
-#### Arguments:
-
-| Option | Description |
-|--------|-------------|
-| `--log-file` | Path to the readings log produced by `read_meter --json` |
-| `--output-dir` | Directory to write output files (default: current directory) |
-
 
 ## Automation with cron
 
@@ -245,6 +267,14 @@ Pick the midpoint of the reliable band and either pass it as
 `--freq-offset-hz <value>` to `read_meter.py` or update the `freq_offset_hz`
 default in `everblu/config.py`.
 
+## Testing
+
+Hardware-independent unit tests:
+
+```bash
+./run.sh unit_test
+```
+
 ## Package layout
 
 ```
@@ -264,14 +294,6 @@ scripts/
 tests/
     test_radian.py       CRC, encode/decode and frame construction tests
     test_cc1101.py       Driver tests against an in-memory SPI mock
-```
-
-## Testing
-
-Hardware-independent unit tests:
-
-```bash
-./run.sh unit_test
 ```
 
 ## Protocol notes
