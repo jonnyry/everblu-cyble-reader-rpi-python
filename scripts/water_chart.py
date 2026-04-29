@@ -34,6 +34,11 @@ from pathlib import Path
 WEEK_SVG = "water_usage_week.svg"
 MONTH_SVG = "water_usage_month.svg"
 DASHBOARD_HTML = "index.html"
+TOUCH_ICON_PNG = "apple-touch-icon.png"
+FAVICON_PNG = "favicon.png"
+ICON_192_PNG = "icon-192.png"
+ICON_512_PNG = "icon-512.png"
+MANIFEST_JSON = "manifest.json"
 
 
 def parse_log(path: str) -> list[dict]:
@@ -268,6 +273,58 @@ def parse_args():
     return parser.parse_args()
 
 
+def _point_in_drop(x: int, y: int, size: int = 180) -> bool:
+    """Return True if pixel (x, y) falls inside a water-drop shape."""
+    cx = size // 2
+    cy_circle = int(size * 0.62)
+    r = int(size * 0.28)
+    top_y = int(size * 0.11)
+    if (x - cx) ** 2 + (y - cy_circle) ** 2 <= r * r:
+        return True
+    if top_y <= y < cy_circle:
+        half_w = r * (cy_circle - y) / (cy_circle - top_y)
+        if abs(x - cx) <= half_w:
+            return True
+    return False
+
+
+def render_icon_png(size: int) -> bytes:
+    """Render a water-drop icon as PNG bytes at any square size (no dependencies)."""
+    import struct, zlib
+    bg = (43, 138, 203)    # #2b8acb, matches chart bar colour
+    drop = (255, 255, 255)
+
+    rows = bytearray()
+    for y in range(size):
+        rows.append(0)  # PNG filter byte: None
+        for x in range(size):
+            rows += bytes(drop if _point_in_drop(x, y, size) else bg)
+
+    def chunk(tag: bytes, data: bytes) -> bytes:
+        c = struct.pack('>I', len(data)) + tag + data
+        return c + struct.pack('>I', zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+    ihdr = chunk(b'IHDR', struct.pack('>IIBBBBB', size, size, 8, 2, 0, 0, 0))
+    idat = chunk(b'IDAT', zlib.compress(bytes(rows)))
+    iend = chunk(b'IEND', b'')
+    return b'\x89PNG\r\n\x1a\n' + ihdr + idat + iend
+
+
+def render_manifest() -> str:
+    return json.dumps({
+        "name": "Water Meter Dashboard",
+        "short_name": "Water",
+        "icons": [
+            {"src": ICON_192_PNG, "sizes": "192x192", "type": "image/png"},
+            {"src": ICON_512_PNG, "sizes": "512x512", "type": "image/png"},
+        ],
+        "start_url": ".",
+        "display": "standalone",
+        "background_color": "#2b8acb",
+        "theme_color": "#2b8acb",
+    }, indent=2)
+
+
 def render_html(generated_at: datetime) -> str:
     timestamp = generated_at.strftime("%d-%b-%Y %H:%M")
     cache_bust = generated_at.strftime("%Y%m%d%H%M")
@@ -275,6 +332,12 @@ def render_html(generated_at: datetime) -> str:
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Water">
+<meta name="theme-color" content="#2b8acb">
+<link rel="icon" type="image/png" href="{FAVICON_PNG}">
+<link rel="apple-touch-icon" href="{TOUCH_ICON_PNG}">
+<link rel="manifest" href="{MANIFEST_JSON}">
 <title>Water meter dashboard</title>
 <style>
   body {{ font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -318,6 +381,11 @@ def main():
         month_days, width=1000, height=380, title="Water usage - last 30 days (litres)",
     ))
 
+    (out_dir / FAVICON_PNG).write_bytes(render_icon_png(32))
+    (out_dir / TOUCH_ICON_PNG).write_bytes(render_icon_png(180))
+    (out_dir / ICON_192_PNG).write_bytes(render_icon_png(192))
+    (out_dir / ICON_512_PNG).write_bytes(render_icon_png(512))
+    (out_dir / MANIFEST_JSON).write_text(render_manifest())
     (out_dir / DASHBOARD_HTML).write_text(render_html(datetime.now()))
 
     print(f"Wrote files to {out_dir}/")

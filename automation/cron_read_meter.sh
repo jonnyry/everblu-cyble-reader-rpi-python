@@ -34,7 +34,7 @@ wrap_error() {
 # --- 1. Take the reading ---
 stdout=$(mktemp)
 stderr=$(mktemp)
-"$PROJECT_DIR/.venv/bin/python" "$PROJECT_DIR/scripts/read_meter.py" --year "$YEAR" --serial "$SERIAL" --json --raw >"$stdout" 2>"$stderr"
+"$PROJECT_DIR/run.sh" read_meter --year "$YEAR" --serial "$SERIAL" --json --raw >"$stdout" 2>"$stderr"
 exit_code=$?
 if [ $exit_code -eq 0 ]; then
     cat "$stdout"
@@ -45,14 +45,11 @@ rm -f "$stdout" "$stderr"
 
 # --- 2. Regenerate charts ---
 mkdir -p "$CHART_OUT"
-if ! "$PROJECT_DIR/.venv/bin/python" "${PROJECT_DIR}/scripts/water_chart.py" --log-file "$LOG_FILE" --output-dir "$CHART_OUT" >/dev/null; then
+if ! "$PROJECT_DIR/run.sh" chart --log-file "$LOG_FILE" --output-dir "$CHART_OUT" >/dev/null; then
     echo "Chart generation failed" >&2
     exit 1
 fi
 
 # --- 3. Publish to ~/www ---
 mkdir -p "$WWW_DIR"
-cp "$CHART_OUT"/index.html \
-   "$CHART_OUT"/water_usage_week.svg \
-   "$CHART_OUT"/water_usage_month.svg \
-   "$WWW_DIR"/
+cp "$CHART_OUT"/* "$WWW_DIR"/
