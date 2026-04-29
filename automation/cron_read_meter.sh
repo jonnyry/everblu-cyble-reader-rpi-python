@@ -23,7 +23,7 @@ source "$CONFIG_FILE"
 # --- 1. Take the reading ---
 stdout=$(mktemp)
 stderr=$(mktemp)
-"$PROJECT_DIR/run.sh" read_meter --year "$YEAR" --serial "$SERIAL" --json --raw >"$stdout" 2>"$stderr"
+"$PROJECT_DIR/run.sh" read_meter --year "$YEAR" --serial "$SERIAL" --json --raw 1>"$stdout" 2>"$stderr"
 exit_code=$?
 if [ $exit_code -eq 0 ]; then
     cat "$stdout" >> "$LOG_FILE"
