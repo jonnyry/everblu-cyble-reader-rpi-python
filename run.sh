@@ -26,6 +26,7 @@ if [ $# -lt 1 ]; then
     echo "  diag        - Run hardware diagnostics"
     echo "  read_meter  - Read the water meter"
     echo "  freq_scan   - Sweep frequency to find calibration offset"
+    echo "  chart       - Generate charts from log file"
     echo "  unit_test   - Run unit tests"
     exit 1
 fi
@@ -43,12 +44,15 @@ case "$COMMAND" in
     freq_scan)
         "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/scripts/freq_scan.py" "$@"
         ;;
+    chart)
+        "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/scripts/water_chart.py" "$@"
+        ;;
     unit_test)
         "$SCRIPT_DIR/.venv/bin/python" -m pytest "$SCRIPT_DIR/tests/" "$@"
         ;;
     *)
         echo "Unknown command: $COMMAND"
-        echo "Valid commands: diag, read_meter, freq_scan, unit_test"
+        echo "Valid commands: diag, read_meter, freq_scan, chart, unit_test"
         exit 1
         ;;
 esac

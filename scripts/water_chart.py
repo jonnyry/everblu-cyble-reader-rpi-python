@@ -1,25 +1,39 @@
 """
-Water meter weekly usage chart generator.
+Water meter usage chart generator.
 
 Reads a log of JSON entries (one object per entry, possibly pretty-printed
-across multiple lines) and produces an SVG bar chart of litres used per day
-for the most recent 7-day window.
+across multiple lines) and produces two SVG bar charts — one for the last 7
+days and one for the last 30 days — plus an HTML dashboard page embedding
+both charts.
+
+Usage:
+    python water_chart.py --log-file PATH [--output-dir DIR]
+
+Output files written to output_dir (default: current directory):
+    water_usage_week.svg   — bar chart of daily litres, last 7 days
+    water_usage_month.svg  — bar chart of daily litres, last 30 days
+    index.html             — simple dashboard page embedding both charts
 
 Notes on interpretation:
-- Readings are cumulative meter values, taken Mon-Fri at 07:00.
-- Daily usage = today's reading - previous valid reading.
-- The Monday reading covers Sat + Sun + Mon usage. We split this evenly
-  across those 3 days and shade them to indicate the value is estimated.
-- Error entries (no `liters` field) are skipped. The next valid reading's
-  delta is computed against the last valid cumulative reading, so usage
-  is still attributable - we just can't break it down per day across the
-  gap, so those days are shown as estimated/averaged too.
+- Readings are cumulative meter values; each entry must have `liters` and
+  `timestamp` fields to be considered valid.
+- Daily usage = current reading - previous valid reading, spread evenly
+  across all days in the gap between the two readings.
+- When multiple days are covered by a single delta (e.g. after a missed
+  reading or a weekend gap), each day gets an equal share and is shaded
+  to indicate the value is estimated rather than directly measured.
+- Error entries (no `liters` field) are skipped; the next valid reading's
+  delta is computed against the last valid cumulative reading.
 """
 
 import json
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
+
+WEEK_SVG = "water_usage_week.svg"
+MONTH_SVG = "water_usage_month.svg"
+DASHBOARD_HTML = "index.html"
 
 
 def parse_log(path: str) -> list[dict]:
@@ -246,63 +260,65 @@ def _nice_ceiling(x: float) -> float:
     return 10 * base
 
 
-if __name__ == "__main__":
-    import sys
-    log_path = sys.argv[1] if len(sys.argv) > 1 else "meter.log"
-    out_dir = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(".")
-    out_dir.mkdir(parents=True, exist_ok=True)
+def parse_args():
+    import argparse
+    parser = argparse.ArgumentParser(description="Generate water usage SVG charts from meter log.")
+    parser.add_argument("--log-file", required=True, help="Path to meter log file")
+    parser.add_argument("--output-dir", default=".", help="Directory to write output files (default: current directory)")
+    return parser.parse_args()
 
-    entries = parse_log(log_path)
 
-    # Week view
-    week_days = compute_daily_usage(entries, days=7)
-    week_svg = render_svg(
-        week_days,
-        width=720,
-        height=360,
-        title="Water usage - last 7 days (litres)",
-    )
-    (out_dir / "water_usage_week.svg").write_text(week_svg)
-
-    # Month view (last 30 days)
-    month_days = compute_daily_usage(entries, days=30)
-    month_svg = render_svg(
-        month_days,
-        width=1000,
-        height=380,
-        title="Water usage - last 30 days (litres)",
-    )
-    (out_dir / "water_usage_month.svg").write_text(month_svg)
-
-    # HTML page
-    html = """<!DOCTYPE html>
+def render_html(generated_at: datetime) -> str:
+    timestamp = generated_at.strftime("%d-%b-%Y %H:%M")
+    cache_bust = generated_at.strftime("%Y%m%d%H%M")
+    return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>Water meter dashboard</title>
 <style>
-  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-         margin: 24px; color: #222; background: #fafafa; }
-  h1 { margin: 0 0 8px; font-size: 22px; }
-  p.sub { margin: 0 0 24px; color: #666; }
-  section { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px;
+  body {{ font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+         margin: 24px; color: #222; background: #fafafa; }}
+  h1 {{ margin: 0 0 8px; font-size: 22px; }}
+  p.sub {{ margin: 0 0 24px; color: #666; }}
+  section {{ background: #fff; border: 1px solid #e5e5e5; border-radius: 8px;
             padding: 16px; margin-bottom: 24px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
-  img { display: block; max-width: 100%; height: auto; }
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03); }}
+  img {{ display: block; max-width: 100%; height: auto; }}
 </style>
 </head>
 <body>
   <h1>Water meter dashboard</h1>
+  <p class="sub">Generated on {timestamp}</p>
   <section>
-    <img src="water_usage_week.svg" alt="Water usage, last 7 days">
+    <img src="{WEEK_SVG}?v={cache_bust}" alt="Water usage, last 7 days">
   </section>
   <section>
-    <img src="water_usage_month.svg" alt="Water usage, last 30 days">
+    <img src="{MONTH_SVG}?v={cache_bust}" alt="Water usage, last 30 days">
   </section>
 </body>
 </html>
 """
-    (out_dir / "index.html").write_text(html)
+
+
+def main():
+    args = parse_args()
+    out_dir = Path(args.output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    entries = parse_log(args.log_file)
+
+    week_days = compute_daily_usage(entries, days=7)
+    (out_dir / WEEK_SVG).write_text(render_svg(
+        week_days, width=720, height=360, title="Water usage - last 7 days (litres)",
+    ))
+
+    month_days = compute_daily_usage(entries, days=30)
+    (out_dir / MONTH_SVG).write_text(render_svg(
+        month_days, width=1000, height=380, title="Water usage - last 30 days (litres)",
+    ))
+
+    (out_dir / DASHBOARD_HTML).write_text(render_html(datetime.now()))
 
     print(f"Wrote files to {out_dir}/")
     print("Week view:")
@@ -311,3 +327,7 @@ if __name__ == "__main__":
         marker = " (est)" if d["estimated"] else ""
         val = f"{int(round(l))} L" if l is not None else "no data"
         print(f"  {d['date']} {d['date'].strftime('%a')}: {val}{marker}")
+
+
+if __name__ == "__main__":
+    main()
