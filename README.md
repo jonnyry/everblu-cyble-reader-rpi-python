@@ -10,23 +10,23 @@ native Python 3 and adds a wiring/health diagnostic suite.
 > only wakes to listen on **weekdays, typically 06:00–18:00**. Outside the
 > window the meter will not respond — this is expected, not a bug.
 
-## Hardware
+# Hardware
 
-### Water meter
+## Water meter
 
 ![Water meter with an Itron EverBlu Cyble RF unit attached](images/water-meter.jpg)
 
 *Yes, my meter is dirty!*
 
-### Raspberry Pi & CC1101 module
+## Raspberry Pi & CC1101 module
 
 ![CC1101 RF module connected to a Raspberry Pi 5](images/rpi-cc1101.jpg)
 
-### CC1101 module
+## CC1101 module
 
 ![CC1101 RF module close up](images/cc1101.jpg)
 
-### Wiring (Pi header pin → CC1101 pin):
+## Wiring (Pi header pin → CC1101 pin):
 
 | Pi header | BCM       | CC1101 pin |
 | --------- | --------- | ---------- |
@@ -41,23 +41,34 @@ native Python 3 and adds a wiring/health diagnostic suite.
 
 Enable SPI on the Pi: `sudo raspi-config` → *Interface Options* → *SPI* → enable. Reboot.
 
+# Software
+
+## Clone repo
+
+Run the following to clone to your raspberry pi:
+
+```bash
+git clone https://github.com/jonnyry/everblu-cyble-reader-rpi-python.git
+```
+
 ## Install
 
 Run the following to setup your python environment, and grant access to SPI and GPIO:
 
 ```bash
+cd everblu-cyble-reader-rpi-python
 ./install.sh
 ```
 `install.sh` does the following:
-1. Enables SPI via raspi-config.
+1. Enables SPI via raspi-config
 2. Install system packages via apt
 3. Grant current user access to SPI and GPIO
 4. Create a Python virtual environment
-5. Install Python packages.
+5. Install Python packages
 
 **You must log out and back in (or reboot) for the spi/gpio group membership to take effect.**
 
-## Diagnostics (run this first)
+## Wiring check - diagnostics
 
 Verify the board is wired correctly and the CC1101 is alive **before**
 trying to talk to the meter:
@@ -79,6 +90,8 @@ Example output:
 [PASS] Config register dump: 47 registers: 0D 2E 06 47 55 00 FF 00 00 00 00 08 00 10 AF 75 F6 83 02 00 00 15 07 00 18 1D 1C C7 00 B2 87 6B FB B6 10 E9 2A 00 1F 41 00 59 7F 3F 81 35 09
 ```
 
+If you get any fails, recheck the wiring and try again.  Please note I noticed fails when using jumper wires > 10cms long.
+
 ## Reading the meter
 
 To read the meter, provide the first two components of serial number of RF unit (eg `15-0202517-123`) to the `--year` and `--serial` parameters as follows:
@@ -87,7 +100,7 @@ To read the meter, provide the first two components of serial number of RF unit 
 ./run.sh read_meter --year 15 --serial 202517 --json
 ```
 
-Example output:
+Example output with the `--json` flag:
 
 ```json
 {
@@ -103,6 +116,12 @@ Example output:
 
 **Please note: the timestamp is taken from the Raspberry Pi and is NOT returned in the meter payload.**
 
+To append to a readings log file:
+
+```bash
+./run.sh read_meter --year 15 --serial 202517 --json > readings.log
+```
+
 #### Arguments:
 
 | Option                   | Description                                                                 |
@@ -117,7 +136,95 @@ Example output:
 | `--verbose`              | Include debug frames (request payload, RX phase info)                       |
 | `--additional-readings`  | Include the list of additional readings (unspecified/unclear purpose)       |
 
-### Finding the right frequency offset (first time on a new CC1101)
+
+## Generating charts
+
+Once you have a several readings in JSON format in a log file (see automation section below for generating a log file), generate an HTML dashboard with SVG bar charts:
+
+```bash
+./run.sh chart --log-file automation/readings.log --output-dir ~/www
+```
+
+![Water meter dashboard](images/water-meter-dashboard.png)
+
+This writes the following files to the output directory:
+
+| File | Description |
+|------|-------------|
+| `index.html` | Dashboard page with charts and a table of recent readings |
+| `water_usage_week.svg` | Bar chart — daily usage, last 7 days |
+| `water_usage_month.svg` | Bar chart — daily usage, last 30 days |
+
+The dashboard shows:
+- Daily litres used per day (bars shaded differently for estimated vs. measured days)
+- A table of the last 7 actual meter readings with timestamps and cumulative value in m³
+
+#### Arguments:
+
+| Option | Description |
+|--------|-------------|
+| `--log-file` | Path to the readings log produced by `read_meter --json` |
+| `--output-dir` | Directory to write output files (default: current directory) |
+
+
+## Automation with cron
+
+`automation/cron_read_meter.sh` takes a reading, appends it to a log file, regenerates the charts, and copies them to `~/www` — all in one step, designed to be run from cron.
+
+### 1. Create the config file
+
+Copy the sample and fill in your meter details:
+
+```bash
+cd automation
+cp meter_config.env.sample meter_config.env
+```
+
+Edit `automation/meter_config.env`:
+
+```bash
+YEAR="15"       # first segment of the label serial (e.g. 15-0202517-123 → 15)
+SERIAL="202517" # middle segment with leading zeros stripped
+```
+
+### 2. Test the script manually
+
+```bash
+bash automation/cron_read_meter.sh
+```
+
+On success, `automation/readings.log` will gain a new JSON entry and `~/www/` will contain the updated dashboard. Errors are written to `automation/error.log`.
+
+### 3. Schedule with cron
+
+The meter only listens on **weekdays between 06:00–18:00**, so schedule within that window. Once per day is sufficient:
+
+```bash
+crontab -e
+```
+
+Add a line such as:
+
+```
+0 7 * * 1-5 /home/pi/everblu-cyble-reader-rpi-python/automation/cron_read_meter.sh
+```
+
+This runs at 07:00 Monday–Friday. Adjust the path to match your installation.
+
+### Environment overrides
+
+The script respects these environment variables if you need to change the defaults:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LOG_FILE` | `automation/readings.log` | Successful readings log |
+| `ERROR_LOG` | `automation/error.log` | Error output log |
+| `CHART_OUT` | `automation/chart_out` | Intermediate chart files |
+| `WWW_DIR` | `~/www` | Published dashboard destination |
+
+
+
+## Frequency scan - finding the right frequency offset
 
 CC1101 modules ship with crystals that drift a few kHz from nominal; the
 meter's narrow RX filter will drop the request unless you trim for it. On
@@ -153,6 +260,7 @@ scripts/
     diag.py              CLI: run diagnostics
     read_meter.py        CLI: read the meter
     freq_scan.py         CLI: sweep frequency to find the crystal calibration
+    water_chart.py       CLI: generate HTML dashboard and SVG charts from log
 tests/
     test_radian.py       CRC, encode/decode and frame construction tests
     test_cc1101.py       Driver tests against an in-memory SPI mock
