@@ -1,13 +1,14 @@
 #!/bin/bash
 #
 # cron_read_meter.sh - Run meter read for cron jobs
-# Outputs JSON to log file, with errors wrapped in JSON format
+# Outputs JSON to readings.log; errors written to errors.log
 # Then regenerates charts and publishes them to ~/www
 #
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 CONFIG_FILE="${SCRIPT_DIR}/meter_config.env"
 LOG_FILE="${LOG_FILE:-$SCRIPT_DIR/readings.log}"
+ERROR_LOG="${ERROR_LOG:-$SCRIPT_DIR/error.log}"
 CHART_OUT="${CHART_OUT:-$SCRIPT_DIR/chart_out}"
 WWW_DIR="${WWW_DIR:-$HOME/www}"
 
@@ -19,28 +20,16 @@ source "$CONFIG_FILE"
 : "${YEAR:?YEAR is not set in $CONFIG_FILE}"
 : "${SERIAL:?SERIAL is not set in $CONFIG_FILE}"
 
-get_timestamp() {
-    date +"%Y-%m-%dT%H:%M:%S%z"
-}
-wrap_error() {
-    local error_message="$1"
-    local timestamp
-    timestamp=$(get_timestamp)
-    local escaped
-    escaped=$(echo "$error_message" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read()))')
-    python3 -c "import sys,json; d={'timestamp':'${timestamp}','error':$escaped}; print(json.dumps(d, indent=2))"
-}
-
 # --- 1. Take the reading ---
 stdout=$(mktemp)
 stderr=$(mktemp)
 "$PROJECT_DIR/run.sh" read_meter --year "$YEAR" --serial "$SERIAL" --json --raw >"$stdout" 2>"$stderr"
 exit_code=$?
 if [ $exit_code -eq 0 ]; then
-    cat "$stdout"
+    cat "$stdout" >> "$LOG_FILE"
 else
-    wrap_error "$(cat "$stderr")"
-fi >> "$LOG_FILE"
+    cat "$stderr" >> "$ERROR_LOG"
+fi
 rm -f "$stdout" "$stderr"
 
 # --- 2. Regenerate charts ---
