@@ -148,7 +148,7 @@ To append to a readings log file:
 | Option                   | Description                                                                 |
 |--------------------------|-----------------------------------------------------------------------------|
 | `--year`                 | First segment of the label serial (`15-0202517-123` → `15`)                 |
-| `--serial`               | Middle segment of the label serial with leading zeros stripped (e.g. `15-0202517-123` → `0202517`). |
+| `--serial`               | Middle segment of the label serial with leading zeros stripped (e.g. `15-0202517-123` → `202517`). |
 | `--freq-offset-hz`       | Frequency trim (Hz) added to 433.82 MHz; only needed if not using default -15000 calibration. |
 | `--retries 3`            | Retry count; the meter may miss the first wake-up                           |
 | `--retry-delay 5`        | Seconds between retries                                                     |
@@ -208,7 +208,7 @@ SERIAL="202517" # middle segment with leading zeros stripped
 bash automation/cron_read_meter.sh
 ```
 
-On success, `automation/readings.log` will gain a new JSON entry and `~/www/` will contain the updated dashboard. Errors are written to `automation/error.log`.
+On success, `automation/readings.log` will gain a new JSON entry and `~/www/` will contain the updated dashboard. Errors are written to `automation/errors.log`.
 
 ### 3. Schedule with cron
 
@@ -233,7 +233,7 @@ The script respects these environment variables if you need to change the defaul
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `LOG_FILE` | `automation/readings.log` | Successful readings log |
-| `ERROR_LOG` | `automation/error.log` | Error output log |
+| `ERROR_LOG` | `automation/errors.log` | Error output log |
 | `CHART_OUT` | `automation/chart_out` | Intermediate chart files |
 | `WWW_DIR` | `~/www` | Published dashboard destination |
 

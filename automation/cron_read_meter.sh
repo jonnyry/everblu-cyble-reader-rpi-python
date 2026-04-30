@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 CONFIG_FILE="${SCRIPT_DIR}/meter_config.env"
 LOG_FILE="${LOG_FILE:-$SCRIPT_DIR/readings.log}"
-ERROR_LOG="${ERROR_LOG:-$SCRIPT_DIR/error.log}"
+ERROR_LOG="${ERROR_LOG:-$SCRIPT_DIR/errors.log}"
 CHART_OUT="${CHART_OUT:-$SCRIPT_DIR/chart_out}"
 WWW_DIR="${WWW_DIR:-$HOME/www}"
 

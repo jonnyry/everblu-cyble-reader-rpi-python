@@ -1,5 +1,6 @@
 __pycache__/
 /.venv
+/.pytest_cache
 /automation/meter_config.env
 /automation/readings.log
 /automation/errors.log

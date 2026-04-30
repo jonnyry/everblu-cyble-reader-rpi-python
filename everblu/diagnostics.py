@@ -5,6 +5,7 @@ detail. The CLI entry point is ``scripts/diag.py``.
 """
 from __future__ import annotations
 
+import inspect
 import time
 from dataclasses import dataclass, field
 from typing import Callable, List, Optional
@@ -239,8 +240,6 @@ def run_all(cfg: Config, radio: Optional[CC1101] = None,
     results: list[DiagResult] = []
     try:
         for check in ALL_CHECKS:
-            # Dispatch based on the check's arg count.
-            import inspect
             sig = inspect.signature(check)
             kwargs = {}
             params = list(sig.parameters)
