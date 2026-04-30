@@ -331,9 +331,15 @@ def _last_n_readings(entries: list[dict], n: int = 7) -> list[dict]:
     return valid[-n:]
 
 
-def _render_readings_table(readings: list[dict]) -> str:
+def _render_readings_table(readings: list[dict], skip_first: bool = False) -> str:
+    """Render readings as HTML table rows, newest first.
+
+    skip_first: if True, readings[0] is context-only (used for delta of
+    readings[1]) and is not rendered as a row.
+    """
     rows = []
-    for i in range(len(readings) - 1, -1, -1):
+    display_start = 1 if skip_first else 0
+    for i in range(len(readings) - 1, display_start - 1, -1):
         e = readings[i]
         ts = datetime.fromisoformat(e["timestamp"])
         date_str = ts.strftime("%a %d %b %Y")
@@ -354,7 +360,9 @@ def _render_readings_table(readings: list[dict]) -> str:
 def render_html(generated_at: datetime, week_days: list[dict], entries: list[dict]) -> str:
     timestamp = generated_at.strftime("%d-%b-%Y %H:%M")
     cache_bust = generated_at.strftime("%Y%m%d%H%M")
-    table_rows = _render_readings_table(_last_n_readings(entries, 8))
+    last_readings = _last_n_readings(entries, 8)
+    skip_first = len(last_readings) == 8
+    table_rows = _render_readings_table(last_readings, skip_first=skip_first)
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -393,7 +401,7 @@ def render_html(generated_at: datetime, week_days: list[dict], entries: list[dic
     <img src="{MONTH_SVG}?v={cache_bust}" alt="Water usage, last 30 days">
   </section>
   <section>
-    <h2 style="margin:0 0 12px;font-size:16px;">Last 7 days</h2>
+    <h2 style="margin:0 0 12px;font-size:16px;">Last 7 readings</h2>
     <table>
 {table_rows}
     </table>
