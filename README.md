@@ -177,16 +177,9 @@ This produces a dashboard like the following:
 
 ![Water meter dashboard](images/water-meter-dashboard.png)
 
-This writes the following files to the output directory:
-
-| File | Description |
-|------|-------------|
-| `index.html` | Dashboard page with charts and a table of recent readings |
-| `water_usage_week.svg` | Bar chart — daily usage, last 7 days |
-| `water_usage_month.svg` | Bar chart — daily usage, last 30 days |
-
 The dashboard shows:
-- Daily litres used per day (bars shaded differently for estimated vs. measured days)
+- A bar chart of litres used per day over the last 7 days
+- A bar chart of litres used per day over the last 30 days
 - A table of the last 7 actual meter readings with timestamps and cumulative value in m³
 
 ## Automation with cron
