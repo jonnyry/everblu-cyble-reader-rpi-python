@@ -377,6 +377,11 @@ def render_html(generated_at: datetime, week_days: list[dict], entries: list[dic
 <link rel="apple-touch-icon" href="{TOUCH_ICON_PNG}">
 <link rel="manifest" href="{MANIFEST_JSON}">
 <title>Water meter dashboard</title>
+<script>
+  document.addEventListener('visibilitychange', function() {{
+    if (!document.hidden) location.reload();
+  }});
+</script>
 <style>
   body {{ font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
          margin: 24px; color: #222; background: #fafafa; }}
