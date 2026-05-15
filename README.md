@@ -4,7 +4,7 @@ Python implementation for reading an **Itron EverBlu Cyble Enhanced V2.1** water
 meter over 433 MHz using a **Raspberry Pi 5** and a **CC1101** SPI
 transceiver. Ports the field-tested C project
 [`neutrinus/everblu-meters`](https://github.com/neutrinus/everblu-meters) to
-native Python 3 and adds a wiring/health diagnostic suite.
+native Python 3, adds a wiring/health diagnostic suite and a charting library.
 
 > The meter uses the proprietary **Radian** protocol (2-FSK on 433.82 MHz). It
 > only wakes to listen on **weekdays, typically 06:00–18:00**. Outside the
