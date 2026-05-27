@@ -2,9 +2,9 @@
 Water meter usage chart generator.
 
 Reads a log of JSON entries (one object per entry, possibly pretty-printed
-across multiple lines) and produces two SVG bar charts — one for the last 7
-days and one for the last 30 days — plus an HTML dashboard page embedding
-both charts.
+across multiple lines) and produces three SVG bar charts — one for the last 7
+days, one for the last 30 days, and one for the last 12 months — plus an HTML
+dashboard page embedding all three charts.
 
 Usage:
     python water_chart.py --log-file PATH [--output-dir DIR]
@@ -12,7 +12,8 @@ Usage:
 Output files written to output_dir (default: current directory):
     water_usage_week.svg   — bar chart of daily litres, last 7 days
     water_usage_month.svg  — bar chart of daily litres, last 30 days
-    index.html             — simple dashboard page embedding both charts
+    water_usage_year.svg   — bar chart of monthly litres, last 12 months
+    index.html             — simple dashboard page embedding all three charts
 
 Notes on interpretation:
 - Readings are cumulative meter values; each entry must have `liters` and
@@ -26,13 +27,15 @@ Notes on interpretation:
   delta is computed against the last valid cumulative reading.
 """
 
+import calendar
 import json
 import re
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 WEEK_SVG = "water_usage_week.svg"
 MONTH_SVG = "water_usage_month.svg"
+YEAR_SVG = "water_usage_year.svg"
 DASHBOARD_HTML = "index.html"
 TOUCH_ICON_PNG = "apple-touch-icon.png"
 FAVICON_PNG = "favicon.png"
@@ -114,6 +117,71 @@ def compute_daily_usage(entries: list[dict], days: int = 7) -> list[dict]:
             "estimated": estimated,
         })
         d += timedelta(days=1)
+    return result
+
+
+def compute_monthly_usage(entries: list[dict]) -> list[dict]:
+    """
+    Return a list of {year, month, litres, estimated} dicts for the last 12
+    calendar months ending on the month of the most recent reading.
+    """
+    valid = []
+    for e in entries:
+        if "liters" in e and "timestamp" in e:
+            ts = datetime.fromisoformat(e["timestamp"])
+            valid.append((ts, e["liters"]))
+    valid.sort(key=lambda x: x[0])
+
+    if len(valid) < 2:
+        raise ValueError("Need at least 2 valid readings to compute usage")
+
+    day_usage: dict = {}
+    for (ts_prev, l_prev), (ts_curr, l_curr) in zip(valid, valid[1:]):
+        delta = l_curr - l_prev
+        d_prev = ts_prev.date()
+        d_curr = ts_curr.date()
+        gap_days = (d_curr - d_prev).days
+        if gap_days <= 0:
+            continue
+        per_day = delta / gap_days
+        estimated = gap_days > 1
+        for i in range(gap_days):
+            d = d_prev + timedelta(days=i)
+            day_usage[d] = (per_day, estimated)
+
+    end_date = valid[-1][0].date() - timedelta(days=1)
+    end_year, end_month = end_date.year, end_date.month
+
+    months = []
+    y, m = end_year, end_month
+    for _ in range(12):
+        months.append((y, m))
+        m -= 1
+        if m == 0:
+            m = 12
+            y -= 1
+    months.reverse()
+
+    result = []
+    for (y, m) in months:
+        total = 0.0
+        any_data = False
+        any_estimated = False
+        _, days_in_month = calendar.monthrange(y, m)
+        for day in range(1, days_in_month + 1):
+            d = date(y, m, day)
+            if d in day_usage:
+                litres, est = day_usage[d]
+                total += litres
+                any_data = True
+                if est:
+                    any_estimated = True
+        result.append({
+            "year": y,
+            "month": m,
+            "litres": total if any_data else None,
+            "estimated": any_estimated,
+        })
     return result
 
 
@@ -252,6 +320,103 @@ def render_svg(days: list[dict], width: int = 720, height: int = 360,
     return "\n".join(parts)
 
 
+def render_monthly_svg(months: list[dict], width: int = 1000, height: int = 380,
+                       title: str = "Water usage (litres)") -> str:
+    """Render the monthly usage as an SVG bar chart (one bar per month)."""
+    margin = {"top": 40, "right": 24, "bottom": 60, "left": 64}
+    plot_w = width - margin["left"] - margin["right"]
+    plot_h = height - margin["top"] - margin["bottom"]
+
+    values = [m["litres"] or 0 for m in months]
+    max_val = max(values) if any(values) else 1
+    nice_max = _nice_ceiling(max_val)
+
+    n = len(months)
+    bar_gap = 12
+    bar_w = (plot_w - bar_gap * (n - 1)) / n
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
+        f'font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">',
+        '<defs>',
+        '<pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" '
+        'patternTransform="rotate(45)">',
+        '<rect width="6" height="6" fill="#7ab8e0"/>',
+        '<line x1="0" y1="0" x2="0" y2="6" stroke="#ffffff" stroke-width="2"/>',
+        '</pattern>',
+        '</defs>',
+        f'<text x="{width/2}" y="22" text-anchor="middle" font-size="16" '
+        f'font-weight="600" fill="#222">{title}</text>',
+    ]
+
+    steps = 5
+    for i in range(steps + 1):
+        y_val = nice_max * i / steps
+        y_px = margin["top"] + plot_h - (y_val / nice_max) * plot_h
+        parts.append(
+            f'<line x1="{margin["left"]}" y1="{y_px}" '
+            f'x2="{margin["left"] + plot_w}" y2="{y_px}" '
+            f'stroke="#e5e5e5" stroke-width="1"/>'
+        )
+        parts.append(
+            f'<text x="{margin["left"] - 8}" y="{y_px + 4}" '
+            f'text-anchor="end" fill="#666">{int(y_val)}</text>'
+        )
+
+    for i, month_data in enumerate(months):
+        x = margin["left"] + i * (bar_w + bar_gap)
+        litres = month_data["litres"]
+        yr = month_data["year"]
+        mo = month_data["month"]
+
+        if litres is None:
+            parts.append(
+                f'<rect x="{x}" y="{margin["top"] + plot_h - 4}" '
+                f'width="{bar_w}" height="4" fill="none" '
+                f'stroke="#bbb" stroke-dasharray="3,3"/>'
+            )
+        else:
+            h = (litres / nice_max) * plot_h
+            y = margin["top"] + plot_h - h
+            fill = "url(#hatch)" if month_data["estimated"] else "#2b8acb"
+            parts.append(
+                f'<rect x="{x}" y="{y}" width="{bar_w}" height="{h}" '
+                f'fill="{fill}" rx="2"/>'
+            )
+            parts.append(
+                f'<text x="{x + bar_w/2}" y="{y - 6}" text-anchor="middle" '
+                f'fill="#333" font-size="11">{int(round(litres))}</text>'
+            )
+
+        mon_abbr = calendar.month_abbr[mo]
+        ly = margin["top"] + plot_h + 18
+        parts.append(
+            f'<text x="{x + bar_w/2}" y="{ly}" text-anchor="middle" '
+            f'fill="#444" font-weight="500">{mon_abbr}</text>'
+        )
+        if mo == 1 or i == 0:
+            parts.append(
+                f'<text x="{x + bar_w/2}" y="{ly + 16}" text-anchor="middle" '
+                f'fill="#888" font-size="11">{yr}</text>'
+            )
+
+    parts.append(
+        f'<line x1="{margin["left"]}" y1="{margin["top"] + plot_h}" '
+        f'x2="{margin["left"] + plot_w}" y2="{margin["top"] + plot_h}" '
+        f'stroke="#444" stroke-width="1"/>'
+    )
+
+    lx = margin["left"]
+    ly = height - 12
+    parts.append(f'<rect x="{lx}" y="{ly - 10}" width="12" height="12" fill="#2b8acb" rx="2"/>')
+    parts.append(f'<text x="{lx + 18}" y="{ly}" fill="#444">Measured</text>')
+    parts.append(f'<rect x="{lx + 110}" y="{ly - 10}" width="12" height="12" fill="url(#hatch)" rx="2"/>')
+    parts.append(f'<text x="{lx + 128}" y="{ly}" fill="#444">Estimated (averaged across gap)</text>')
+
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+
 def _nice_ceiling(x: float) -> float:
     """Round x up to a nice round number for axis scaling."""
     if x <= 0:
@@ -357,7 +522,7 @@ def _render_readings_table(readings: list[dict], skip_first: bool = False) -> st
     return "\n".join(rows)
 
 
-def render_html(generated_at: datetime, week_days: list[dict], entries: list[dict]) -> str:
+def render_html(generated_at: datetime, week_days: list[dict], entries: list[dict], year_months: list[dict] | None = None) -> str:
     timestamp = generated_at.strftime("%d-%b-%Y %H:%M")
     cache_bust = generated_at.strftime("%Y%m%d%H%M")
     last_readings = _last_n_readings(entries, 8)
@@ -409,6 +574,9 @@ def render_html(generated_at: datetime, week_days: list[dict], entries: list[dic
     <img src="{MONTH_SVG}?v={cache_bust}" alt="Water usage, last 30 days">
   </section>
   <section>
+    <img src="{YEAR_SVG}?v={cache_bust}" alt="Water usage, last 12 months">
+  </section>
+  <section>
     <h2 style="margin:0 0 12px;font-size:16px;">Last 7 readings</h2>
     <table>
 {table_rows}
@@ -436,12 +604,17 @@ def main():
         month_days, width=1000, height=380, title="Water usage - last 30 days (litres)",
     ))
 
+    year_months = compute_monthly_usage(entries)
+    (out_dir / YEAR_SVG).write_text(render_monthly_svg(
+        year_months, width=1000, height=380, title="Water usage - last 12 months (litres)",
+    ))
+
     (out_dir / FAVICON_PNG).write_bytes(render_icon_png(32))
     (out_dir / TOUCH_ICON_PNG).write_bytes(render_icon_png(180))
     (out_dir / ICON_192_PNG).write_bytes(render_icon_png(192))
     (out_dir / ICON_512_PNG).write_bytes(render_icon_png(512))
     (out_dir / MANIFEST_JSON).write_text(render_manifest())
-    (out_dir / DASHBOARD_HTML).write_text(render_html(datetime.now(), week_days, entries))
+    (out_dir / DASHBOARD_HTML).write_text(render_html(datetime.now(), week_days, entries, year_months))
 
     print(f"Wrote files to {out_dir}/")
     print("Week view:")
