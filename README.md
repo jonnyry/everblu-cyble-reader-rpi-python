@@ -180,6 +180,7 @@ This produces a dashboard like the following:
 The dashboard shows:
 - A bar chart of litres used per day over the last 7 days
 - A bar chart of litres used per day over the last 30 days
+- A bar chart of litres used per month over the last 12 months
 - A table of the last 7 actual meter readings with timestamps and cumulative value in m³
 
 ## Automation with cron
