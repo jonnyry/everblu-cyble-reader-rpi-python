@@ -338,13 +338,6 @@ def render_monthly_svg(months: list[dict], width: int = 1000, height: int = 380,
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
         f'font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">',
-        '<defs>',
-        '<pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6" '
-        'patternTransform="rotate(45)">',
-        '<rect width="6" height="6" fill="#7ab8e0"/>',
-        '<line x1="0" y1="0" x2="0" y2="6" stroke="#ffffff" stroke-width="2"/>',
-        '</pattern>',
-        '</defs>',
         f'<text x="{width/2}" y="22" text-anchor="middle" font-size="16" '
         f'font-weight="600" fill="#222">{title}</text>',
     ]
@@ -378,10 +371,9 @@ def render_monthly_svg(months: list[dict], width: int = 1000, height: int = 380,
         else:
             h = (litres / nice_max) * plot_h
             y = margin["top"] + plot_h - h
-            fill = "url(#hatch)" if month_data["estimated"] else "#2b8acb"
             parts.append(
                 f'<rect x="{x}" y="{y}" width="{bar_w}" height="{h}" '
-                f'fill="{fill}" rx="2"/>'
+                f'fill="#2b8acb" rx="2"/>'
             )
             parts.append(
                 f'<text x="{x + bar_w/2}" y="{y - 6}" text-anchor="middle" '
@@ -405,13 +397,6 @@ def render_monthly_svg(months: list[dict], width: int = 1000, height: int = 380,
         f'x2="{margin["left"] + plot_w}" y2="{margin["top"] + plot_h}" '
         f'stroke="#444" stroke-width="1"/>'
     )
-
-    lx = margin["left"]
-    ly = height - 12
-    parts.append(f'<rect x="{lx}" y="{ly - 10}" width="12" height="12" fill="#2b8acb" rx="2"/>')
-    parts.append(f'<text x="{lx + 18}" y="{ly}" fill="#444">Measured</text>')
-    parts.append(f'<rect x="{lx + 110}" y="{ly - 10}" width="12" height="12" fill="url(#hatch)" rx="2"/>')
-    parts.append(f'<text x="{lx + 128}" y="{ly}" fill="#444">Estimated (averaged across gap)</text>')
 
     parts.append("</svg>")
     return "\n".join(parts)
