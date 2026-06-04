@@ -21,8 +21,7 @@ jobs:
       - uses: actions/checkout@v6
       - name: Prepare site
         run: |
-          TITLE=$(sed -n '1s/^# //p' README.md)
-          { printf -- "---\ntitle: \"%s\"\n---\n\n" "$TITLE"; head -1 README.md; printf '\n[View source on GitHub](https://github.com/${{ github.repository }})\n\n'; tail -n +2 README.md; } > docs/index.md
+          { head -1 README.md; printf '\n[View source on GitHub](https://github.com/${{ github.repository }})\n\n'; tail -n +2 README.md; } > docs/index.md
           sed -i 's|docs/images/|images/|g' docs/index.md
       - uses: actions/configure-pages@v6
       - uses: actions/jekyll-build-pages@v1
