@@ -315,7 +315,8 @@ A python devcontainer is included for development use. It provides a consistent 
 To run tests inside the container:
 
 ```bash
-./run.sh unit_test
+pytest tests/test_cc1101.py
+pytest tests/test_radian.py
 ```
 
 ## Credits
