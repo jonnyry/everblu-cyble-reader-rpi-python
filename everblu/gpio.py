@@ -6,8 +6,6 @@ Uses ``lgpio`` which is the supported library on Raspberry Pi 5
 from __future__ import annotations
 
 import time
-from typing import Optional
-
 
 class GPIOError(RuntimeError):
     pass

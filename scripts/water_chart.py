@@ -29,7 +29,6 @@ Notes on interpretation:
 
 import calendar
 import json
-import re
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -440,7 +439,9 @@ def _point_in_drop(x: int, y: int, size: int = 180) -> bool:
 
 def render_icon_png(size: int) -> bytes:
     """Render a water-drop icon as PNG bytes at any square size (no dependencies)."""
-    import struct, zlib
+    import struct
+    import zlib
+
     bg = (43, 138, 203)    # #2b8acb, matches chart bar colour
     drop = (255, 255, 255)
 
@@ -604,9 +605,9 @@ def main():
     print(f"Wrote files to {out_dir}/")
     print("Week view:")
     for d in week_days:
-        l = d["litres"]
+        litres = d["litres"]
         marker = " (est)" if d["estimated"] else ""
-        val = f"{int(round(l))} L" if l is not None else "no data"
+        val = f"{int(round(litres))} L" if litres is not None else "no data"
         print(f"  {d['date']} {d['date'].strftime('%a')}: {val}{marker}")
 
 

@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Optional
 
 from . import cc1101_regs as R
-from .cc1101 import CC1101, CC1101Error
+from .cc1101 import CC1101
 from .config import Config
 from .gpio import GPIO
 from .radian import (
@@ -134,7 +134,7 @@ class MeterReader:
         """Capture a Radian frame. Two-stage: first find the 0x55 sync,
         then switch to the trailing 0xFF marker and pull data.
         """
-        buf_size = expected_bytes * 4 + 32
+        #buf_size = expected_bytes * 4 + 32
         self.radio.flush_rx()
         self.radio.write_reg(R.MCSM1, 0x0F)    # CCA always; default to RX
         self.radio.write_reg(R.MDMCFG2, 0x02)  # 2-FSK, 16/16 sync
@@ -147,7 +147,9 @@ class MeterReader:
 
         pin = self.cfg.gpio.gdo0_pin
         stage_deadline = time.monotonic() + timeout_s
-        remaining = lambda: max(0.0, stage_deadline - time.monotonic())
+
+        def remaining() -> float:
+            return max(0.0, stage_deadline - time.monotonic())
 
         if not self.gpio.wait_high(pin, remaining()):
             raise ReaderError("timeout waiting for first sync")
