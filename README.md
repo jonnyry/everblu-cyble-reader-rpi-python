@@ -1,7 +1,7 @@
 # EverBlu Cyble Water Meter Reader & Charting
 
 Python implementation for reading an **Itron EverBlu Cyble Enhanced V2.1** water
-meter over 433 MHz using a **Raspberry Pi 5** and a **CC1101** SPI
+meter over 433 MHz using a **Raspberry Pi** and a **CC1101** SPI
 transceiver. Ports the field-tested C project
 [`neutrinus/everblu-meters`](https://github.com/neutrinus/everblu-meters) to
 native Python 3, adds a wiring/health diagnostic suite and a charting library.
@@ -36,17 +36,17 @@ native Python 3, adds a wiring/health diagnostic suite and a charting library.
 
 ## Water meter
 
-![Water meter with an Itron EverBlu Cyble RF unit attached](images/water-meter.jpg)
+![Water meter with an Itron EverBlu Cyble RF unit attached](docs/images/water-meter.jpg)
 
 *Yes, my meter is dirty!*
 
 ## Raspberry Pi & CC1101 module
 
-![CC1101 RF module connected to a Raspberry Pi 5](images/rpi-cc1101.jpg)
+![CC1101 RF module connected to a Raspberry Pi 5](docs/images/rpi-cc1101.jpg)
 
 ## CC1101 module
 
-![CC1101 RF module close up](images/cc1101.jpg)
+![CC1101 RF module close up](docs/images/cc1101.jpg)
 
 ## Wiring (Pi header pin → CC1101 pin):
 
@@ -176,7 +176,7 @@ Once you have a several readings in JSON format in a log file (see automation se
 
 This produces a dashboard like the following:
 
-![Water meter dashboard](images/water-meter-dashboard.png)
+![Water meter dashboard](docs/images/water-meter-dashboard.png)
 
 The dashboard shows:
 - A bar chart of litres used per day over the last 7 days
