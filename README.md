@@ -1,4 +1,4 @@
-# EverBlu Cyble Water Meter Reader & Charting
+# everblu-cyble-reader-rpi-python
 
 Python implementation for reading an **Itron EverBlu Cyble Enhanced V2.1** water
 meter over 433 MHz using a **Raspberry Pi** and a **CC1101** SPI
