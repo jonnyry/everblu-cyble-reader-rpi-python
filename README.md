@@ -28,6 +28,7 @@ native Python 3, adds a wiring/health diagnostic suite and a charting library.
   - [Testing](#testing)
   - [Package layout](#package-layout)
   - [Protocol notes](#protocol-notes)
+- [Dev container](#dev-container)
 - [Credits](#credits)
 - [License](#license)
 
@@ -306,6 +307,16 @@ See comments in `everblu/radian.py` for the encoding details. Summary:
   collapses 4-sample runs and strips the start/stop framing, yielding the
   raw payload bytes. Litres are a 32-bit little-endian integer at offset 18;
   see `parse_meter_report` for other documented fields.
+
+## Devcontainer
+
+A python devcontainer is included for development use. It provides a consistent environment for editing code, running the test suite, and linting — but it **cannot** run `read_meter` or any script that talks to the CC1101, since that requires a Raspberry Pi with the transceiver physically wired up.
+
+To run tests inside the container:
+
+```bash
+./run.sh unit_test
+```
 
 ## Credits
 
