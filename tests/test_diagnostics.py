@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
-
 from everblu import cc1101_regs as R
 from everblu.cc1101 import CC1101
 from everblu.config import Config

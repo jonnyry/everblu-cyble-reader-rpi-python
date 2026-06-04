@@ -1,7 +1,6 @@
 """Tests for scripts/water_chart.py"""
 from __future__ import annotations
 
-import importlib.util
 import json
 import sys
 from datetime import date, datetime, timedelta
@@ -13,8 +12,7 @@ import pytest
 # Load water_chart from scripts/ (not a package)
 # --------------------------------------------------------------------------- #
 
-_SCRIPTS_DIR = Path(__file__).parent.parent / "scripts"
-sys.path.insert(0, str(_SCRIPTS_DIR))
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 import water_chart as wc
 
 
