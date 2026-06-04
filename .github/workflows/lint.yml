@@ -25,4 +25,4 @@ jobs:
         run: pip install ruff
 
       - name: Run ruff
-        run: ruff check pi_monitor.py tests/
+        run: ruff check .
