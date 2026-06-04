@@ -28,7 +28,7 @@ native Python 3, adds a wiring/health diagnostic suite and a charting library.
   - [Testing](#testing)
   - [Package layout](#package-layout)
   - [Protocol notes](#protocol-notes)
-- [Devcontainer](#devcontainer)
+  - [Devcontainer](#devcontainer)
 - [Credits](#credits)
 - [License](#license)
 
