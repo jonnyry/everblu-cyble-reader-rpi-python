@@ -1,12 +1,12 @@
-"""Tests for everblu/diagnostics.py using a mocked SPI bus."""
+"""Tests for libraries/diagnostics.py using a mocked SPI bus."""
 from __future__ import annotations
 
 from unittest.mock import patch
 
-from everblu import cc1101_regs as R
-from everblu.cc1101 import CC1101
-from everblu.config import Config
-from everblu.diagnostics import (
+from libraries import cc1101_regs as R
+from libraries.cc1101 import CC1101
+from libraries.config import Config
+from libraries.diagnostics import (
     DiagResult,
     check_frequency_roundtrip,
     check_patable_readback,
@@ -123,7 +123,7 @@ def test_check_patable_readback_fail_on_mismatch():
 def test_check_strobe_state_transitions_pass():
     fake = FakeSpi()
     radio = CC1101(spi=fake)
-    with patch("everblu.diagnostics.time.sleep"):
+    with patch("libraries.diagnostics.time.sleep"):
         result = check_strobe_state_transitions(radio)
     assert result.passed is True
     assert result.data["idle"] == 0x01

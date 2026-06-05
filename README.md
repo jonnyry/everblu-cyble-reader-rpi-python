@@ -260,7 +260,7 @@ To recalibrate for a different module:
 
 Pick the midpoint of the reliable band and either pass it as
 `--freq-offset-hz <value>` to `read_meter.py` or update the `freq_offset_hz`
-default in `everblu/config.py`.
+default in `libraries/config.py`.
 
 ## Testing
 
@@ -273,7 +273,7 @@ Hardware-independent unit tests:
 ## Package layout
 
 ```
-everblu/
+libraries/
     config.py            Meter / radio / GPIO configuration dataclasses
     cc1101_regs.py       CC1101 register & strobe constants, default config table
     cc1101.py            Thin spidev-based CC1101 driver
@@ -295,7 +295,7 @@ tests/
 
 ## Protocol notes
 
-See comments in `everblu/radian.py` for the encoding details. Summary:
+See comments in `libraries/radian.py` for the encoding details. Summary:
 
 - TX: ~2 s wake-up (`0x55` bytes at 2.4 kbps, no preamble/sync), followed
   by a 39-byte frame = 9-byte fixed sync pattern + 19-byte CRC-Kermit-protected

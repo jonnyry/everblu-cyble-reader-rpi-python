@@ -11,8 +11,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from everblu.config import Config
-from everblu.reader import MeterReader, ReaderError, in_listen_window
+from libraries.config import Config
+from libraries.reader import MeterReader, ReaderError, in_listen_window
 
 
 def main(argv=None) -> int:

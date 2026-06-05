@@ -5,7 +5,7 @@ C code (or equivalent libcrc functions) against known inputs.
 """
 from __future__ import annotations
 
-from everblu.radian import (
+from libraries.radian import (
     SYNC_PATTERN,
     build_payload,
     crc_kermit,

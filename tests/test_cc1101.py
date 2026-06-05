@@ -1,8 +1,8 @@
 """Tests for CC1101 driver using a mocked SPI bus."""
 from __future__ import annotations
 
-from everblu import cc1101_regs as R
-from everblu.cc1101 import CC1101
+from libraries import cc1101_regs as R
+from libraries.cc1101 import CC1101
 
 
 class FakeSpi:

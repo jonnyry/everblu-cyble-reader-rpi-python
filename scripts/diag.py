@@ -9,8 +9,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from everblu.config import Config
-from everblu.diagnostics import run_all
+from libraries.config import Config
+from libraries.diagnostics import run_all
 
 
 def main(argv=None) -> int:
