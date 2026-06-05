@@ -287,8 +287,10 @@ scripts/
     freq_scan.py         CLI: sweep frequency to find the crystal calibration
     water_chart.py       CLI: generate HTML dashboard and SVG charts from log
 tests/
-    test_radian.py       CRC, encode/decode and frame construction tests
     test_cc1101.py       Driver tests against an in-memory SPI mock
+    test_radian.py       CRC, encode/decode and frame construction tests
+    test_diagnostics.py  Diagnostics utility tests
+    test_water_chart.py  Chart producing utility tests
 ```
 
 ## Protocol notes
@@ -315,8 +317,7 @@ A python devcontainer is included for development use. It provides a consistent 
 To run tests inside the container:
 
 ```bash
-pytest tests/test_cc1101.py
-pytest tests/test_radian.py
+pytest tests/
 ```
 
 ## Credits
